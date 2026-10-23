@@ -153,6 +153,7 @@ class DatabaseManager:
         self.engine = create_engine(self.db_url, **engine_args)
 
         if self.is_sqlite:
+
             @sa.event.listens_for(self.engine, "connect")
             def set_sqlite_pragma(dbapi_connection, connection_record):
                 cursor = dbapi_connection.cursor()
