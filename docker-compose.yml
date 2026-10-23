@@ -1,0 +1,78 @@
+version: '3.8'
+
+services:
+  # ---------------------------------------------------------------------------
+  # 1. PostgreSQL 16 Target Database
+  # ---------------------------------------------------------------------------
+  postgres:
+    image: postgres:16-alpine
+    container_name: transactionflow_postgres
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER:-postgres}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-postgres}
+      POSTGRES_DB: ${POSTGRES_DB:-transactionflow}
+    ports:
+      - "5432:5432"
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+      - ./sql/schema.sql:/docker-entrypoint-initdb.d/init.sql
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres -d transactionflow"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+      start_period: 5s
+
+  # ---------------------------------------------------------------------------
+  # 2. Mock Financial Gateway REST API
+  # ---------------------------------------------------------------------------
+  mock-api:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: transactionflow_mock_api
+    restart: unless-stopped
+    command: ["uvicorn", "mock_api.app:app", "--host", "0.0.0.0", "--port", "8000"]
+    ports:
+      - "8000:8000"
+    healthcheck:
+      test: ["CMD-SHELL", "curl -f http://localhost:8000/health || exit 1"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+      start_period: 5s
+
+  # ---------------------------------------------------------------------------
+  # 3. High-Volume ETL Application
+  # ---------------------------------------------------------------------------
+  etl:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: transactionflow_etl
+    depends_on:
+      postgres:
+        condition: service_healthy
+      mock-api:
+        condition: service_healthy
+    environment:
+      DATABASE_URL: postgresql+psycopg://postgres:postgres@postgres:5432/transactionflow
+      API_BASE_URL: http://mock-api:8000
+      ENVIRONMENT: production
+      LOG_LEVEL: INFO
+    volumes:
+      - ./data:/app/data
+    command: >
+      sh -c "
+        echo '=== Generating Synthetic CSV Dataset (100,000 records) ===' &&
+        python scripts/generate_transactions.py --records 100000 --output /app/data/transactions_100k.csv &&
+        echo '=== Executing CSV ETL Pipeline ===' &&
+        python scripts/run_pipeline.py --source-type CSV --source /app/data/transactions_100k.csv --batch-size 25000 &&
+        echo '=== Executing Mock REST API Ingestion ===' &&
+        python scripts/run_pipeline.py --source-type REST_API --source http://mock-api:8000 --api-pages 5 --api-page-size 200
+      "
+
+volumes:
+  pgdata:
+    driver: local

@@ -1,0 +1,36 @@
+{
+  "timestamp": "2026-10-23T10:20:11.621663+00:00",
+  "target_records": 1000000,
+  "batch_size": 50000,
+  "seed": 42,
+  "database_url": "sqlite:///D%3A%5CProject2%5Cdata%5Ctransactionflow.db",
+  "system_specs": {
+    "os": "Windows",
+    "os_release": "10",
+    "os_version": "10.0.26300",
+    "machine": "AMD64",
+    "processor": "Intel64 Family 6 Model 140 Stepping 1, GenuineIntel",
+    "cpu_count_logical": 8,
+    "python_version": "3.11.9",
+    "python_compiler": "MSC v.1938 64 bit (AMD64)"
+  },
+  "generation": {
+    "duration_seconds": 22.453,
+    "file_size_mb": 120.01,
+    "generation_rate_rows_sec": 44537.5
+  },
+  "pipeline": {
+    "run_id": "RUN-20261023101534-d47e89",
+    "status": "SUCCESS",
+    "records_extracted": 1000000,
+    "records_accepted": 992885,
+    "records_rejected": 5153,
+    "duplicate_records": 1962,
+    "records_loaded": 992885,
+    "risk_flagged_records": 60,
+    "reconciliation_status": "BALANCED",
+    "duration_seconds": 277.125,
+    "throughput_rows_sec": 3608.5,
+    "peak_memory_mb": 674.55
+  }
+}
