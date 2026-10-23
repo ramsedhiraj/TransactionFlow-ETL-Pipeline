@@ -9,9 +9,14 @@ import json
 import sys
 from pathlib import Path
 
-from src.config import settings
-from src.database import DatabaseManager
-from src.pipeline import run_pipeline
+# Ensure project root is in sys.path when script is executed directly
+PROJECT_ROOT = Path(__file__).resolve().parent.parent
+if str(PROJECT_ROOT) not in sys.path:
+    sys.path.insert(0, str(PROJECT_ROOT))
+
+from src.config import settings  # noqa: E402
+from src.database import DatabaseManager  # noqa: E402
+from src.pipeline import run_pipeline  # noqa: E402
 
 
 def main():

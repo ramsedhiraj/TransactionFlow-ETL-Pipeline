@@ -91,12 +91,14 @@ jobs:
       - name: Execute Integration Tests against Live PostgreSQL
         env:
           DATABASE_URL: postgresql+psycopg://postgres:postgres@localhost:5432/transactionflow
+          PYTHONPATH: .
         run: |
           pytest -v tests/test_database.py tests/test_pipeline_integration.py
 
       - name: Test End-to-End Pipeline Ingestion against PostgreSQL
         env:
           DATABASE_URL: postgresql+psycopg://postgres:postgres@localhost:5432/transactionflow
+          PYTHONPATH: .
         run: |
           echo "Generating 10,000 synthetic transactions for CI smoke test..."
           python scripts/generate_transactions.py --records 10000 --output data/ci_smoke_10k.csv --seed 99
